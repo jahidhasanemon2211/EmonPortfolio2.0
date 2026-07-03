@@ -134,7 +134,7 @@ export default function App() {
 
       {/* Bottom Bar Detail */}
       <footer className="py-6 sm:py-0 h-auto sm:h-12 border-t border-gray-900 flex flex-col sm:flex-row items-center px-6 lg:px-12 justify-between gap-4 sm:gap-0 relative z-10 bg-[#080808]/80 backdrop-blur-sm shrink-0">
-        <span className="text-[9px] sm:text-[10px] text-gray-600 uppercase tracking-widest text-center sm:text-left">Md Jahid Hasan Emon // {new Date().getFullYear()} NOC Portfolio</span>
+        <span className="text-[9px] sm:text-[10px] text-gray-600 tracking-widest text-center sm:text-left">Handcrafted with ❤️ by Md Jahid Hasan Emon &copy; {new Date().getFullYear()}</span>
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></div>
           <span className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-widest">Status: Online & Monitoring</span>
