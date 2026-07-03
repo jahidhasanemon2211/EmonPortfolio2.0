@@ -38,6 +38,25 @@ export default function App() {
             Md Jahid Hasan <span className="text-amber-500">Emon</span>
           </h1>
 
+          {/* Mobile Profile Image */}
+          <div className="lg:hidden w-full max-w-[280px] sm:max-w-[320px] mx-auto mb-8 relative animate-fade-in">
+            <div className="w-full aspect-[3/4] bg-gradient-to-tr from-[#111] to-[#222] border border-gray-800 rounded-2xl relative overflow-hidden group shadow-2xl">
+              <img
+                src="https://github.com/jahidhasanemon2211.png"
+                alt="Md Jahid Hasan Emon Profile"
+                className="w-full h-full object-cover mix-blend-luminosity opacity-80 group-hover:mix-blend-normal group-hover:opacity-100 transition-all duration-700"
+              />
+              {/* Decorative corner marks */}
+              <div className="absolute top-6 left-6 w-4 h-4 border-t border-l border-amber-500/40"></div>
+              <div className="absolute bottom-6 right-6 w-4 h-4 border-b border-r border-amber-500/40"></div>
+            </div>
+
+            {/* Briefcase Badge */}
+            <div className="absolute -bottom-4 -right-4 sm:-bottom-6 sm:-right-6 bg-amber-500 text-black p-3 sm:p-4 rounded-xl border border-[#111] shadow-xl transform rotate-3 hover:rotate-0 transition-transform">
+              <Briefcase className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+          </div>
+
           <div className="flex items-center justify-center lg:justify-start gap-4 mb-8">
             <div className="hidden lg:block h-[1px] w-12 bg-amber-500/50"></div>
             <p className="text-base sm:text-lg md:text-xl text-gray-300 font-light tracking-wide uppercase italic">
@@ -87,7 +106,7 @@ export default function App() {
         </div>
 
         {/* Right Column: Visual Identity */}
-        <div className="w-full max-w-[280px] sm:max-w-[360px] flex flex-col items-center lg:items-end pb-12 lg:pb-0">
+        <div className="hidden lg:flex w-full max-w-[280px] sm:max-w-[360px] flex-col items-center lg:items-end pb-12 lg:pb-0">
           <div className="relative w-full">
             <div className="w-full aspect-[3/4] bg-gradient-to-tr from-[#111] to-[#222] border border-gray-800 rounded-2xl relative overflow-hidden group shadow-2xl">
               <img
