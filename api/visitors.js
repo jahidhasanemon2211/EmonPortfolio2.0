@@ -1,4 +1,17 @@
-// api/visitors.js
+import { createClient } from 'redis';
+
+let client;
+async function getRedisClient() {
+  if (!client) {
+    client = createClient({
+      url: process.env.REDIS_URL
+    });
+    client.on('error', (err) => console.error('Redis Client Error', err));
+    await client.connect();
+  }
+  return client;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -22,30 +35,19 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "sessionId is required" });
   }
 
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
-
-  if (!url || !token) {
-    return res.status(200).json({ success: true, warning: "KV not configured" });
+  const redisUrl = process.env.REDIS_URL;
+  if (!redisUrl) {
+    return res.status(200).json({ success: true, warning: "REDIS_URL not configured" });
   }
 
   try {
-    const pipelineUrl = `${url}/pipeline`;
-    const response = await fetch(pipelineUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify([
-        ["SADD", "visitor:total:all", sessionId],
-        ["SETEX", `visitor:online:${sessionId}`, "60", "1"]
-      ])
-    });
+    const redis = await getRedisClient();
 
-    if (!response.ok) {
-      throw new Error(`KV pipeline failed: ${response.statusText}`);
-    }
+    // Perform updates in parallel
+    await Promise.all([
+      redis.sAdd("visitor:total:all", sessionId),
+      redis.set(`visitor:online:${sessionId}`, "1", { EX: 60 })
+    ]);
 
     return res.status(200).json({ success: true });
   } catch (error) {

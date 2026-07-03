@@ -1,4 +1,17 @@
-// api/portfolio.js
+import { createClient } from 'redis';
+
+let client;
+async function getRedisClient() {
+  if (!client) {
+    client = createClient({
+      url: process.env.REDIS_URL
+    });
+    client.on('error', (err) => console.error('Redis Client Error', err));
+    await client.connect();
+  }
+  return client;
+}
+
 export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -14,13 +27,12 @@ export default async function handler(req, res) {
     return;
   }
 
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
+  const redisUrl = process.env.REDIS_URL;
 
-  // Fallback so the website loads even if KV isn't configured yet
-  if (!url || !token) {
+  // Fallback so the website loads even if Redis isn't configured yet
+  if (!redisUrl) {
     if (req.method === 'GET') {
-      return res.status(200).json({ data: null, warning: "KV not configured" });
+      return res.status(200).json({ data: null, warning: "REDIS_URL not configured" });
     }
     if (req.method === 'POST') {
       const { password } = req.body;
@@ -28,29 +40,15 @@ export default async function handler(req, res) {
       if (password !== expectedPassword) {
         return res.status(401).json({ error: "Unauthorized" });
       }
-      return res.status(500).json({ error: "KV database not linked. Please connect a KV database in Vercel." });
+      return res.status(500).json({ error: "Redis database not linked. Please connect a database in Vercel." });
     }
   }
 
-  const runKvCommand = async (command) => {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(command)
-    });
-    if (!response.ok) {
-      throw new Error(`KV command failed: ${response.statusText}`);
-    }
-    const result = await response.json();
-    return result.result;
-  };
-
   try {
+    const redis = await getRedisClient();
+
     if (req.method === 'GET') {
-      const data = await runKvCommand(["GET", "portfolio:data"]);
+      const data = await redis.get("portfolio:data");
       return res.status(200).json({ data: data ? JSON.parse(data) : null });
     }
 
@@ -62,7 +60,7 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: "Unauthorized" });
       }
 
-      await runKvCommand(["SET", "portfolio:data", JSON.stringify(data)]);
+      await redis.set("portfolio:data", JSON.stringify(data));
       return res.status(200).json({ success: true });
     }
 

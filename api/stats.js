@@ -1,4 +1,17 @@
-// api/stats.js
+import { createClient } from 'redis';
+
+let client;
+async function getRedisClient() {
+  if (!client) {
+    client = createClient({
+      url: process.env.REDIS_URL
+    });
+    client.on('error', (err) => console.error('Redis Client Error', err));
+    await client.connect();
+  }
+  return client;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -20,38 +33,23 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
-
-  if (!url || !token) {
+  const redisUrl = process.env.REDIS_URL;
+  if (!redisUrl) {
     return res.status(200).json({
       totalVisitors: 0,
       onlineVisitors: 0,
-      warning: "KV not configured"
+      warning: "REDIS_URL not configured"
     });
   }
 
   try {
-    const pipelineUrl = `${url}/pipeline`;
-    const response = await fetch(pipelineUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify([
-        ["SCARD", "visitor:total:all"],
-        ["KEYS", "visitor:online:*"]
-      ])
-    });
+    const redis = await getRedisClient();
 
-    if (!response.ok) {
-      throw new Error(`KV pipeline failed: ${response.statusText}`);
-    }
+    const [totalVisitors, onlineKeys] = await Promise.all([
+      redis.sCard("visitor:total:all"),
+      redis.keys("visitor:online:*")
+    ]);
 
-    const results = await response.json();
-    const totalVisitors = results[0]?.result || 0;
-    const onlineKeys = results[1]?.result || [];
     const onlineVisitors = onlineKeys.length;
 
     return res.status(200).json({
